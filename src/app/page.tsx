@@ -1,66 +1,82 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import { DigestPreview } from "@/components/digest-preview";
+import { FilterBar } from "@/components/filter-bar";
+import { MapPanel } from "@/components/map-panel";
+import { MarketSignalsShell } from "@/components/market-signals-shell";
+import { SignalCard } from "@/components/signal-card";
+import {
+  digests,
+  filterSignals,
+  getNeighborhoodActivity,
+  getTrendCards,
+  savedViews,
+} from "@/lib/market-signals/data";
+import type { SignalFilters } from "@/lib/market-signals/types";
 
-export default function Home() {
+function getFilters(searchParams: Record<string, string | string[] | undefined>): SignalFilters {
+  const value = (key: string) => {
+    const item = searchParams[key];
+    return Array.isArray(item) ? item[0] : item;
+  };
+
+  return {
+    city: value("city"),
+    signal_family: value("signal_family") as SignalFilters["signal_family"],
+    buyer_persona: value("buyer_persona") as SignalFilters["buyer_persona"],
+    promotion_status: value("promotion_status") as SignalFilters["promotion_status"],
+    q: value("q"),
+  };
+}
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const resolvedSearchParams = await searchParams;
+  const filters = getFilters(resolvedSearchParams);
+  const filteredSignals = filterSignals(filters);
+  const trendCards = getTrendCards();
+  const neighborhoods = getNeighborhoodActivity();
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <MarketSignalsShell
+      eyebrow="Daily Intelligence Brief"
+      title="Feed"
+      description="Track local business openings, commercial activity, and demand spikes before competitors react."
+    >
+      <section className="hero panel">
+        <div>
+          <p className="eyebrow">Market pulse</p>
+          <h3>Market Signals</h3>
+          <p className="muted">
+            A local-market Bloomberg-style terminal for Kansas City and St. Joseph,
+            optimized for B2B sellers who need the earliest believable signal.
           </p>
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="hero-metrics">
+          {trendCards.map((card) => (
+            <div key={card.label} className={`metric-card ${card.tone}`}>
+              <span>{card.label}</span>
+              <strong>{card.value}</strong>
+            </div>
+          ))}
         </div>
-      </main>
-    </div>
+      </section>
+
+      <FilterBar filters={filters} savedViews={savedViews} />
+
+      <div className="content-grid">
+        <section className="signal-list">
+          {filteredSignals.map((signal) => (
+            <SignalCard key={signal.id} signal={signal} />
+          ))}
+        </section>
+
+        <div className="sidebar-stack">
+          <MapPanel neighborhoods={neighborhoods} />
+          <DigestPreview digest={digests[0]} />
+        </div>
+      </div>
+    </MarketSignalsShell>
   );
 }
