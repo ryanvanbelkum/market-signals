@@ -6,7 +6,10 @@ export function MapPanel({
   return (
     <section className="panel">
       <div className="panel-header">
-        <h3>Map / list activity</h3>
+        <div>
+          <p className="eyebrow">Spatial view</p>
+          <h3>Map / list activity</h3>
+        </div>
         <p className="muted">
           A lightweight stand-in for a map, highlighting where signal density is
           clustering right now.

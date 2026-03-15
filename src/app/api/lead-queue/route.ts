@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { getLeadQueue } from "@/lib/market-signals/data";
+import { listLeadQueue } from "@/lib/market-signals/repository";
 
-export function GET() {
-  const queue = getLeadQueue();
+export async function GET() {
+  const queue = await listLeadQueue();
 
   return NextResponse.json({
     data: queue,

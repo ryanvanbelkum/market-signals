@@ -1,21 +1,30 @@
 import { NextResponse } from "next/server";
 
-import { getSignalById, promotionEvents, sourceConnectors } from "@/lib/market-signals/data";
+import {
+  getSignal,
+  listPromotionEvents,
+  listSourceConnectors,
+} from "@/lib/market-signals/repository";
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const signal = getSignalById(id);
+  const signal = await getSignal(id);
 
   if (!signal) {
     return NextResponse.json({ error: "Signal not found" }, { status: 404 });
   }
 
+  const [sourceConnectors, promotionEvents] = await Promise.all([
+    listSourceConnectors(),
+    listPromotionEvents(signal.id),
+  ]);
+
   return NextResponse.json({
     data: signal,
     connector: sourceConnectors.find((item) => item.id === signal.source_id),
-    promotion_history: promotionEvents.filter((item) => item.signal_id === signal.id),
+    promotion_history: promotionEvents,
   });
 }

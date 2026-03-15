@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { MarketSignalsSidebar } from "@/components/market-signals-shell";
 
 export const metadata: Metadata = {
   title: "Market Signals",
@@ -13,7 +14,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <div className="app-shell">
+          <div className="ambient ambient-one" />
+          <div className="ambient ambient-two" />
+          <MarketSignalsSidebar />
+          {children}
+        </div>
+      </body>
     </html>
   );
 }

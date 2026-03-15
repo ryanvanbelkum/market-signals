@@ -108,3 +108,22 @@ export interface SignalFilters {
   promotion_status?: PromotionStatus;
   q?: string;
 }
+
+export interface IngestionRun {
+  id: string;
+  connector_id: string;
+  started_at: string;
+  completed_at: string | null;
+  status: "running" | "succeeded" | "failed";
+  records_fetched: number;
+  signals_written: number;
+  error_message: string | null;
+}
+
+export interface RawSourceRecord {
+  id: string;
+  connector_id: string;
+  source_record_key: string;
+  payload: Record<string, unknown>;
+  fetched_at: string;
+}

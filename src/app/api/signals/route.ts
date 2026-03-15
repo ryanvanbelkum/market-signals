@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { filterSignals } from "@/lib/market-signals/data";
+import { listSignals } from "@/lib/market-signals/repository";
 import type { SignalFilters } from "@/lib/market-signals/types";
 
-export function GET(request: NextRequest) {
+export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const filters: SignalFilters = {
     city: searchParams.get("city") ?? undefined,
@@ -16,11 +16,13 @@ export function GET(request: NextRequest) {
     q: searchParams.get("q") ?? undefined,
   };
 
+  const data = await listSignals(filters);
+
   return NextResponse.json({
-    data: filterSignals(filters),
+    data,
     meta: {
       filters,
-      total: filterSignals(filters).length,
+      total: data.length,
     },
   });
 }

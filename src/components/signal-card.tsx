@@ -8,7 +8,24 @@ const statusLabel: Record<MarketSignal["promotion_status"], string> = {
   lead_queue: "Lead queue",
 };
 
-export function SignalCard({ signal }: { signal: MarketSignal }) {
+function formatBuyerFit(signal: MarketSignal) {
+  if (!signal.buyer_personas.length) {
+    return "Unassigned";
+  }
+
+  return signal.buyer_personas.slice(0, 2).join(", ");
+}
+
+export function SignalCard({
+  signal,
+  variant = "feed",
+}: {
+  signal: MarketSignal;
+  variant?: "feed" | "queue" | "digest";
+}) {
+  const isQueue = variant === "queue";
+  const isDigest = variant === "digest";
+
   return (
     <article className="signal-card">
       <div className="signal-meta">
@@ -23,28 +40,42 @@ export function SignalCard({ signal }: { signal: MarketSignal }) {
           <p className="signal-entity">
             {signal.entity_name} · {signal.neighborhood}
           </p>
-          <p className="muted">{signal.description}</p>
+          {!isQueue ? <p className="muted">{signal.description}</p> : null}
         </div>
 
-        <dl className="signal-stats">
-          <div>
-            <dt>Confidence</dt>
-            <dd>{Math.round(signal.confidence_score * 100)}%</dd>
-          </div>
-          <div>
-            <dt>Lead score</dt>
-            <dd>{signal.lead_score}</dd>
-          </div>
-          <div>
-            <dt>Buyer fit</dt>
-            <dd>{signal.buyer_personas.join(", ")}</dd>
-          </div>
-        </dl>
+        {isQueue ? (
+          <dl className="signal-stats signal-stats-compact">
+            <div>
+              <dt>Lead score</dt>
+              <dd>{signal.lead_score}</dd>
+            </div>
+            <div>
+              <dt>Confidence</dt>
+              <dd>{Math.round(signal.confidence_score * 100)}%</dd>
+            </div>
+            <div>
+              <dt>Buyer fit</dt>
+              <dd>{formatBuyerFit(signal)}</dd>
+            </div>
+          </dl>
+        ) : isDigest ? (
+          <p className="signal-summary muted">
+            {statusLabel[signal.promotion_status]} · Lead score {signal.lead_score} ·{" "}
+            {formatBuyerFit(signal)}
+          </p>
+        ) : (
+          <p className="signal-summary muted">
+            Lead score {signal.lead_score} · {Math.round(signal.confidence_score * 100)}%
+            confidence · {formatBuyerFit(signal)}
+          </p>
+        )}
       </div>
 
       <div className="signal-footer">
-        <span>{signal.signal_date}</span>
-        <Link href={`/signals/${signal.id}`}>Open detail</Link>
+        <span className="signal-date">{signal.signal_date}</span>
+        <Link href={`/signals/${signal.id}`}>
+          {isDigest ? "Open signal" : isQueue ? "Prepare outreach" : "Open detail"}
+        </Link>
       </div>
     </article>
   );

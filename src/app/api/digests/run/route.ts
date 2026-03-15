@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
 
-import { digests, getDigestSignals } from "@/lib/market-signals/data";
+import { generateDigestRun, getDigestSignals } from "@/lib/market-signals/repository";
 
 export async function POST() {
-  const latestDigest = digests[0];
+  try {
+    const latestDigest = await generateDigestRun();
 
-  return NextResponse.json({
-    message: "Digest generation simulated successfully.",
-    data: {
-      ...latestDigest,
-      signals: getDigestSignals(latestDigest),
-    },
-  });
+    return NextResponse.json({
+      message: "Digest generation completed and persisted.",
+      data: {
+        ...latestDigest,
+        signals: await getDigestSignals(latestDigest),
+      },
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unable to generate digest.";
+    return NextResponse.json({ error: message }, { status: 503 });
+  }
 }

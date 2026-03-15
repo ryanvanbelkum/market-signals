@@ -2,7 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { MarketSignalsShell } from "@/components/market-signals-shell";
-import { getSignalById, promotionEvents, sourceConnectors } from "@/lib/market-signals/data";
+import { SignalLocationMap } from "@/components/signal-location-map";
+import {
+  getSignal,
+  listPromotionEvents,
+  listSourceConnectors,
+} from "@/lib/market-signals/repository";
 
 export default async function SignalDetailPage({
   params,
@@ -10,14 +15,17 @@ export default async function SignalDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const signal = getSignalById(id);
+  const signal = await getSignal(id);
 
   if (!signal) {
     notFound();
   }
 
-  const connector = sourceConnectors.find((item) => item.id === signal.source_id);
-  const history = promotionEvents.filter((item) => item.signal_id === signal.id);
+  const [connectors, history] = await Promise.all([
+    listSourceConnectors(),
+    listPromotionEvents(signal.id),
+  ]);
+  const connector = connectors.find((item) => item.id === signal.source_id);
 
   return (
     <MarketSignalsShell
@@ -66,6 +74,16 @@ export default async function SignalDetailPage({
         </article>
 
         <aside className="sidebar-stack">
+          <SignalLocationMap
+            addressLine={signal.address_line}
+            city={signal.city}
+            state={signal.state}
+            postalCode={signal.postal_code}
+            lat={signal.lat}
+            lng={signal.lng}
+            neighborhood={signal.neighborhood}
+          />
+
           <article className="panel">
             <div className="panel-header">
               <h3>Connector state</h3>
